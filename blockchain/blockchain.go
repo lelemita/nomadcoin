@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type block struct {
+type Block struct {
 	Data string
 	Hash string
 	PrevHash string
@@ -14,7 +14,7 @@ type block struct {
 
 type blockchain struct {
 	// 너무 길어지니까 포인터의 슬라이스로 함
-	blocks []*block
+	Blocks []*Block
 }
 
 // singleton pattern: only one instance
@@ -23,7 +23,7 @@ var b *blockchain
 var once sync.Once
 
 func (b *blockchain) AddBlock(data string) {
-	b.blocks = append(b.blocks, createBlock(data))
+	b.Blocks = append(b.Blocks, createBlock(data))
 }
 
 func GetBlockchain() *blockchain {
@@ -38,24 +38,24 @@ func GetBlockchain() *blockchain {
 }
 
 func getLastHash() string {
-	totalBlocks := len(GetBlockchain().blocks)
+	totalBlocks := len(GetBlockchain().Blocks)
 	if totalBlocks == 0 {
 		return ""
 	}
-	return GetBlockchain().blocks[totalBlocks - 1].Hash
+	return GetBlockchain().Blocks[totalBlocks - 1].Hash
 }
 
-func (b *block) calculateHash() {
+func (b *Block) calculateHash() {
 	hash := sha256.Sum256([]byte(b.Data + b.PrevHash))
 	b.Hash = fmt.Sprintf("%x", hash)
 }
 
-func createBlock(data string) *block {
-	newBlock := block{data, "", getLastHash()}
+func createBlock(data string) *Block {
+	newBlock := Block{data, "", getLastHash()}
 	newBlock.calculateHash()
 	return &newBlock
 }
 
-func (b *blockchain) AllBlocks() []*block {
-	return b.blocks
+func (b *blockchain) AllBlocks() []*Block {
+	return b.Blocks
 }
