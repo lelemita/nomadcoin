@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	port string = ":4000"
 	templateDir string = "explorer/templates/"
 )
 var templates *template.Template
@@ -39,13 +38,14 @@ func add (rw http.ResponseWriter, r *http.Request) {
 	
 }
 
-func Start() {
-		// page 추가하면서 obj 생성
+func Start(port int) {
+	// page 추가하면서 obj 생성
 	templates = template.Must(template.ParseGlob(templateDir + "pages/*.gohtml"))
 	// 생성한 templates obj update
 	templates = template.Must(templates.ParseGlob(templateDir + "partials/*.gohtml"))
-	http.HandleFunc("/", home)
-	http.HandleFunc("/add", add)
-	fmt.Printf("Listening on http://localhost%s\n", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", home)
+	handler.HandleFunc("/add", add)
+	fmt.Printf("Listening on http://localhost:%d\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
 }
