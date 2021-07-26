@@ -55,14 +55,12 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Description: "See A Block",
 		},
 	}
-	rw.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(rw).Encode(data)
 }
 
 func blocks (rw http.ResponseWriter, r *http.Request) {
 	switch r.Method{
 	case "GET":
-		rw.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(rw).Encode(blockchain.GetBlockchain().AllBlocks())
 	case "POST":
 		var blockData addBlockBody
@@ -85,9 +83,18 @@ func block(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Middleware: All request에 Content-type을 설정
+func jsonContentTypeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Conetext-Type", "application/json")
+		next.ServeHTTP(rw, r)
+	})
+}
+
 func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
 	handler := mux.NewRouter()
+	handler.Use(jsonContentTypeMiddleware)
 	handler.HandleFunc("/", documentation ).Methods("GET")
 	handler.HandleFunc("/blocks", blocks ).Methods("GET", "POST")
 	handler.HandleFunc("/blocks/{height:[0-9]+}", block).Methods("GET")
