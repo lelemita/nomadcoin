@@ -1,9 +1,37 @@
 package main
 
 import (
-	"github.com/lelemita/nomadcoin/rest"
+	"flag"
+	"fmt"
+	"os"
 )
 
+func usage() {
+	fmt.Printf("Welcome to 노마드 코인\n\n")
+	fmt.Printf("Please use the following commands:\n\n")
+	fmt.Printf("explorer:	Start the HTML Explorer\n")
+	fmt.Printf("rest:		Start the REST API (recommended)\n\n")
+	os.Exit(0)
+} 
+
 func main() {
-	rest.Start(4000)
+	if len(os.Args) < 2 {
+		usage()
+	}
+
+	rest := flag.NewFlagSet("rest", flag.ExitOnError)
+	portFlag := rest.Int("port", 4000, "Sets the port of server")
+
+	switch os.Args[1] {
+	case "explorer":
+		fmt.Printf("Start explorer")
+	case "rest":
+		rest.Parse(os.Args[2:])
+	default:
+		usage()
+	}
+
+	if rest.Parsed() {
+		fmt.Printf("Start rest server: %d\n", *portFlag)
+	}
 }
