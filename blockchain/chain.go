@@ -1,8 +1,6 @@
 package blockchain
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"sync"
 
@@ -25,8 +23,7 @@ var b *blockchain
 var once sync.Once
 
 func (b *blockchain) restore(data []byte) {
-	decoder := gob.NewDecoder(bytes.NewReader(data))
-	utils.HandleErr(decoder.Decode(b))
+	utils.FromBytes(b, data)
 }
 
 func (b *blockchain) AddBlock (data string){
@@ -41,12 +38,10 @@ func Blockchain() *blockchain {
 	if b == nil {
 		once.Do(func() {
 			b = &blockchain{"", 0}
-			fmt.Printf("Height: %d\nNewest Hash: %s\n", b.Height, b.NewestHash)
 			checkpoint := db.Checkpoint()
 			if checkpoint == nil {
 				b.AddBlock("Genesis")
 			} else {
-				fmt.Println("Restoring...")
 				b.restore(checkpoint)
 			}
 		})

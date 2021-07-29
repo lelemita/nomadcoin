@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 
 	"github.com/lelemita/nomadcoin/db"
@@ -17,6 +18,23 @@ type Block struct {
 
 func (b *Block) persist() {
 	db.SaveBlock(b.Hash, utils.ToBytes(b))
+}
+
+var ErrNotFound = errors.New("Block not found")
+
+func (b *Block) restore(data []byte) {
+	utils.FromBytes(b, data)
+}
+
+func FindBlock(hash string) (*Block, error) {
+	blockByte := db.Block(hash)
+	if blockByte == nil {
+		return nil, ErrNotFound
+	} else {
+		block := &Block{}
+		block.restore(blockByte)
+		return block, nil
+	}
 }
 
 func createBlock(data string, prevHash string, height int) *Block{

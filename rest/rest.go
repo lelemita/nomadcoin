@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/lelemita/nomadcoin/blockchain"
@@ -50,7 +49,7 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Payload: "message:string",
 		},
 		{
-			URL: url("/blocks/{height}"),
+			URL: url("/blocks/{hash}"),
 			Method: "GET",
 			Description: "See A Block",
 		},
@@ -61,7 +60,7 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 func blocks (rw http.ResponseWriter, r *http.Request) {
 	switch r.Method{
 	case "GET":
-		json.NewEncoder(rw).Encode(blockchain.Blockchain().AllBlocks())
+		// json.NewEncoder(rw).Encode(blockchain.Blockchain().AllBlocks())
 	case "POST":
 		var blockData addBlockBody
 		utils.HandleErr(json.NewDecoder(r.Body).Decode(&blockData))
@@ -72,9 +71,7 @@ func blocks (rw http.ResponseWriter, r *http.Request) {
 
 func block(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	height, err := strconv.Atoi(vars["height"])
-	utils.HandleErr(err)
-	block, err := blockchain.Blockchain().GetBlock(height)
+	block, err := blockchain.FindBlock(vars["hash"])
 	encoder := json.NewEncoder(rw)
 	if err == blockchain.ErrNotFound {
 		encoder.Encode(errorResponse{fmt.Sprint(err)})
@@ -97,7 +94,7 @@ func Start(aPort int) {
 	handler.Use(jsonContentTypeMiddleware)
 	handler.HandleFunc("/", documentation ).Methods("GET")
 	handler.HandleFunc("/blocks", blocks ).Methods("GET", "POST")
-	handler.HandleFunc("/blocks/{height:[0-9]+}", block).Methods("GET")
+	handler.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
 }
