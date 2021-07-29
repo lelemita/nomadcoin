@@ -13,7 +13,7 @@ type blockchain struct {
 }
 
 func (b *blockchain) persist() {
-	db.SaveBlockChain(utils.ToBytes(b))
+	db.SaveCheckpoint(utils.ToBytes(b))
 }
 
 // singleton pattern: only one instance
