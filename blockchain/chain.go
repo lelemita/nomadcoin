@@ -1,6 +1,9 @@
 package blockchain
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"sync"
 
 	"github.com/lelemita/nomadcoin/db"
@@ -21,6 +24,11 @@ var b *blockchain
 // 딱 한번 실행되도록 하기 (goroutin, thread 가 여러개여도..)
 var once sync.Once
 
+func (b *blockchain) restore(data []byte) {
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	utils.HandleErr(decoder.Decode(b))
+}
+
 func (b *blockchain) AddBlock (data string){
 	block := createBlock(data, b.NewestHash, b.Height + 1)
 	b.NewestHash = block.Hash
@@ -33,8 +41,16 @@ func Blockchain() *blockchain {
 	if b == nil {
 		once.Do(func() {
 			b = &blockchain{"", 0}
-			b.AddBlock("Genesis")
+			fmt.Printf("Height: %d\nNewest Hash: %s\n", b.Height, b.NewestHash)
+			checkpoint := db.Checkpoint()
+			if checkpoint == nil {
+				b.AddBlock("Genesis")
+			} else {
+				fmt.Println("Restoring...")
+				b.restore(checkpoint)
+			}
 		})
 	}
+	fmt.Printf("Height: %d\nNewest Hash: %s\n", b.Height, b.NewestHash)
 	return b
 }
