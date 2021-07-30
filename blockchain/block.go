@@ -16,7 +16,7 @@ type Block struct {
 	Height int `json:"height"`
 	Difficulty int `json:"difficulty"`
 	Nonce int `json:"nonce"`
-	Timestamp int `json:"timestamp`
+	Timestamp int `json:"timestamp"`
 }
 
 func (b *Block) persist() {
