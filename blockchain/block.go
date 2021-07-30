@@ -1,19 +1,13 @@
 package blockchain
 
 import (
-	"crypto/sha256"
 	"errors"
-	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lelemita/nomadcoin/db"
 	"github.com/lelemita/nomadcoin/utils"
 )
-
-// the number of zero in hash's front
-// for this, change the value of Nonce
-const difficulty int = 2
-
 
 type Block struct {
 	Data string `json:"data"`
@@ -22,6 +16,7 @@ type Block struct {
 	Height int `json:"height"`
 	Difficulty int `json:"difficulty"`
 	Nonce int `json:"nonce"`
+	Timestamp int `json:"timestamp`
 }
 
 func (b *Block) persist() {
@@ -48,11 +43,10 @@ func FindBlock(hash string) (*Block, error) {
 func (b * Block) mine() {
 	target := strings.Repeat("0", b.Difficulty)
 	for {
-		blockAsString := fmt.Sprint(b)
-		hash := fmt.Sprintf("%x", sha256.Sum256([]byte(blockAsString)))
+		b.Timestamp = int(time.Now().Unix())
+		hash := utils.Hash(b)
 		if strings.HasPrefix(hash, target) {
 			b.Hash = hash
-			fmt.Printf("Block as String: %s\nHash: %s", blockAsString, hash)
 			break
 		} else {
 			b.Nonce += 1
@@ -66,7 +60,7 @@ func createBlock(data string, prevHash string, height int) *Block{
 		Hash: "", 
 		PrevHash: prevHash,
 		Height: height,
-		Difficulty: difficulty,
+		Difficulty: Blockchain().difficulty(),
 		Nonce: 0,
 	}
 	block.mine()

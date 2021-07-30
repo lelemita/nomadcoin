@@ -7,9 +7,18 @@ import (
 	"github.com/lelemita/nomadcoin/utils"
 )
 
+const (
+	defaultDifficulty int = 2
+	difficultyIntterval int = 5
+	// 2분/1블록 목표.
+	blockInterval int = 2
+	allowedRange int = 2
+)
+
 type blockchain struct {
 	NewestHash string `json:"newestHash"`
 	Height int `json:"height"`
+	CurrentDifficulty int `json:"currentDifficulty"`
 }
 
 func (b *blockchain) persist() {
@@ -29,6 +38,7 @@ func (b *blockchain) AddBlock(data string){
 	block := createBlock(data, b.NewestHash, b.Height + 1)
 	b.NewestHash = block.Hash
 	b.Height = block.Height
+	b.CurrentDifficulty = block.Difficulty
 	b.persist()
 }
 
@@ -47,11 +57,37 @@ func (b *blockchain) Blocks() []*Block {
 	return blocks
 }
 
+func (b *blockchain) recalculateDifficulty() int {
+	allBlocks := b.Blocks()
+	newest := allBlocks[0]
+	lastCalculated := allBlocks[difficultyIntterval - 1]
+	actualTime := (newest.Timestamp - lastCalculated.Timestamp) / 60
+	expectedTime := blockInterval * difficultyIntterval 
+	if actualTime >= (expectedTime + allowedRange) {
+		return b.CurrentDifficulty - 1
+	} else if actualTime <= (expectedTime - allowedRange) {
+		return b.CurrentDifficulty + 1
+	}
+	return b.CurrentDifficulty
+}
+
+func (b *blockchain) difficulty() int {
+	if b.Height == 0 {
+		return defaultDifficulty
+	} else if b.Height % difficultyIntterval == 0 {
+		return b.recalculateDifficulty()
+	} else {
+		return b.CurrentDifficulty
+	}
+}
+
 func Blockchain() *blockchain {
 	// 초기화 되었는지 확인하고 딱 한번 생성
 	if b == nil {
 		once.Do(func() {
-			b = &blockchain{"", 0}
+			b = &blockchain{
+				Height: 0,
+			}
 			checkpoint := db.Checkpoint()
 			if checkpoint == nil {
 				b.AddBlock("Genesis")
