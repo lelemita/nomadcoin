@@ -9,11 +9,18 @@ import (
 	"github.com/lelemita/nomadcoin/utils"
 )
 
+// the number of zero in hash's front
+// for this, change the value of Nonce
+const difficulty int = 2
+
+
 type Block struct {
 	Data string `json:"data"`
 	Hash string `json:"hash"`
 	PrevHash string `json:"prevHash,omitempty"`
 	Height int `json:"height"`
+	Difficulty int `json:"difficulty"`
+	Nonce int `json:"nonce"`
 }
 
 func (b *Block) persist() {
