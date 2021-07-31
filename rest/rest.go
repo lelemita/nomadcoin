@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lelemita/nomadcoin/blockchain"
-	"github.com/lelemita/nomadcoin/utils"
 )
 
 var port string
@@ -25,10 +24,6 @@ type urlDescription struct {
 	Method string `json:"method"`
 	Description string `json:"description"`
 	Payload string `json:"payload,omitempty"`
-}
-
-type addBlockBody struct {
-	Message string
 }
 
 type errorResponse struct {
@@ -71,9 +66,7 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	case "GET":
 		json.NewEncoder(rw).Encode(blockchain.Blockchain().Blocks())
 	case "POST":
-		var blockData addBlockBody
-		utils.HandleErr(json.NewDecoder(r.Body).Decode(&blockData))
-		blockchain.Blockchain().AddBlock(blockData.Message)
+		blockchain.Blockchain().AddBlock()
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
