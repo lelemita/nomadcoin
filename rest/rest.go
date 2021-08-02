@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lelemita/nomadcoin/blockchain"
+	"github.com/lelemita/nomadcoin/utils"
 )
 
 var port string
@@ -24,6 +25,11 @@ type urlDescription struct {
 	Method string `json:"method"`
 	Description string `json:"description"`
 	Payload string `json:"payload,omitempty"`
+}
+
+type balanceResponse struct {
+	Address  string `json:"address"`
+	Balance  int    `json:"balance"`
 }
 
 type errorResponse struct {
@@ -52,6 +58,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			URL: url("/blocks/{hash}"),
 			Method: "GET",
 			Description: "See A Block",
+		},
+		{
+			URL: url("/balance/{address}"),
+			Method: "GET",
+			Description: "Get TxOuts for an Address",
 		},
 	}
 	json.NewEncoder(rw).Encode(data)
@@ -90,14 +101,30 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// ?total=true 이면 총액 반환 / 그 외는 목록
+func balance(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	address := vars["address"]
+	isTotal := r.URL.Query().Get("total")
+	encoder := json.NewEncoder(rw)
+	switch isTotal {
+	case "true":
+		amount := blockchain.Blockchain().BalanceByAddress(address)
+		utils.HandleErr(encoder.Encode(balanceResponse{address, amount}))
+	default:
+		utils.HandleErr(encoder.Encode(blockchain.Blockchain().TxOutsByAddress(address)))
+	}
+}
+
 func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
-	handler := mux.NewRouter()
-	handler.Use(jsonContentTypeMiddleware)
-	handler.HandleFunc("/", documentation ).Methods("GET")
-	handler.HandleFunc("/status", status ).Methods("GET")
-	handler.HandleFunc("/blocks", blocks ).Methods("GET", "POST")
-	handler.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
+	router := mux.NewRouter()
+	router.Use(jsonContentTypeMiddleware)
+	router.HandleFunc("/", documentation ).Methods("GET")
+	router.HandleFunc("/status", status ).Methods("GET")
+	router.HandleFunc("/blocks", blocks ).Methods("GET", "POST")
+	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
+	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	fmt.Printf("Listening on http://localhost%s\n", port)
-	log.Fatal(http.ListenAndServe(port, handler))
+	log.Fatal(http.ListenAndServe(port, router))
 }
