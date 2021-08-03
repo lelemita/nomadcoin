@@ -29,8 +29,9 @@ func (t *Tx) getId() {
 } 
 
 type TxIn struct {
+	TxId string `json:"txId"`
+	Index int `json:"index"`
 	Owner string `json:"owner"`
-	Amount int `json:"amount"`
 }
 
 type TxOut struct {
@@ -38,10 +39,16 @@ type TxOut struct {
 	Amount int `json:"amount"`
 }
 
+type UTxOut struct {
+	TxId string `json:"txId"`
+	Index int `json:"index"`
+	Amount int `json:"amount"`
+}
+
 // 돈 찍기: 채굴자를 주소로 삼는 코인베이스 거래내역을 생성해서 Tx포인터를 반환
 func makeCoinbaseTx(address string) *Tx {
 	txIns := []*TxIn {
-		{"COINBASE", minerReward},
+		{"", -1, "COINBASE"},
 	}
 	txOuts := []*TxOut {
 		{address, minerReward},
@@ -57,27 +64,24 @@ func makeCoinbaseTx(address string) *Tx {
 }
 
 func makeTx(from, to string, amount int) (*Tx, error) {
-	beforeFrom := Blockchain().BalanceByAddress(from)
-	if beforeFrom < amount {
+	if Blockchain().BalanceByAddress(from) < amount {
 		return nil, errors.New("not enough money")
 	}
-	var txIns []*TxIn
 	var txOuts []*TxOut
+	var txIns []*TxIn
 	total := 0
-	oldTxOuts := Blockchain().TxOutsByAddress(from)
-	for _, txOut := range oldTxOuts {
-		if total > amount {
+	uTxOuts := Blockchain().UTxOutsByAddress(from)
+	for _, uTx := range uTxOuts {
+		if total >= amount {
 			break
 		}
-		txIn := &TxIn{txOut.Owner, txOut.Amount}
-		txIns = append(txIns, txIn)
-		total += txIn.Amount
+		txIns = append(txIns, &TxIn{uTx.TxId, uTx.Index, from})
+		total += uTx.Amount
 	}
-	change := total - amount
-	if change != 0 {
+	// 잔돈 계산
+	if change := total - amount; change != 0 {
 		txOuts = append(txOuts, &TxOut{from, change})
 	}
-
 	txOuts = append(txOuts, &TxOut{to, amount})
 	tx := Tx{
 		Id: "",
@@ -85,7 +89,6 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		TxIns: txIns,
 		TxOuts: txOuts,
 	}
-	tx.getId()
 	return &tx, nil
 }
 

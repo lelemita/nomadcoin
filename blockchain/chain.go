@@ -81,31 +81,36 @@ func (b *blockchain) difficulty() int {
 	}
 }
 
-func (b *blockchain) txOuts() []*TxOut {
-	var txOuts = []*TxOut{}
-	blocks := b.Blocks()
-	for _, block := range blocks {
+// 한 블록안에서, 특정인의, TxOuts에는 있고 TxIns에는 없는 TxOuts 목록
+func (b *blockchain) UTxOutsByAddress(address string) []*UTxOut {
+	// Unspent Transaction
+	var uTxOuts []*UTxOut
+	// spent transaction outputs
+	creatorTxs := make(map[string]bool)
+	for _, block := range b.Blocks() {
 		for _, tx := range block.Transactions {
-			txOuts = append(txOuts, tx.TxOuts...)
+			// input으로 사용된 tx들 찾기
+			for _, txIn := range tx.TxIns {
+				if txIn.Owner == address {
+					creatorTxs[txIn.TxId] = true
+				}
+			}
+			// outs 중에서 input에 없는 것들 찾기
+			for idx, txOut := range tx.TxOuts {
+				if txOut.Owner == address {
+					if ok := creatorTxs[tx.Id]; !ok {
+						uTxOuts = append(uTxOuts, &UTxOut{tx.Id, idx, txOut.Amount})
+					}
+				}
+			}
 		}
 	}
-	return txOuts
-}
-
-func (b *blockchain) TxOutsByAddress(address string) []*TxOut {
-	var ownedTxOuts = []*TxOut{}
-	txOuts := b.txOuts()
-	for _, txOut := range txOuts {
-		if txOut.Owner == address {
-			ownedTxOuts = append(ownedTxOuts, txOut)
-		}
-	}
-	return ownedTxOuts
+	return uTxOuts
 }
 
 // 총 자산
 func (b *blockchain) BalanceByAddress(address string) int {
-	txOuts := b.TxOutsByAddress(address)
+	txOuts := b.UTxOutsByAddress(address)
 	var amount int = 0
 	for _, txOut := range txOuts {
 		amount += txOut.Amount
