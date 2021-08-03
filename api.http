@@ -19,5 +19,5 @@ POST http://localhost:4000/transaction
 
 {
     "to": "yeon",
-    "amount": 65
+    "amount": 35
 }
