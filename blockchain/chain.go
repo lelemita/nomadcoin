@@ -21,10 +21,6 @@ type blockchain struct {
 	CurrentDifficulty int `json:"currentDifficulty"`
 }
 
-func (b *blockchain) persist() {
-	db.SaveCheckpoint(utils.ToBytes(b))
-}
-
 // singleton pattern: only one instance
 var b *blockchain
 // 딱 한번 실행되도록 하기 (goroutin, thread 가 여러개여도..)
@@ -39,10 +35,15 @@ func (b *blockchain) AddBlock(){
 	b.NewestHash = block.Hash
 	b.Height = block.Height
 	b.CurrentDifficulty = block.Difficulty
-	b.persist()
+	persistBlockchain(b)
 }
 
-func (b *blockchain) Blocks() []*Block {
+func persistBlockchain(b *blockchain) {
+	db.SaveCheckpoint(utils.ToBytes(b))
+}
+
+// struct를 mutate시키지 않으므로 단순 function으로 구현
+func Blocks(b *blockchain) []*Block {
 	var blocks []*Block
 	hashCursor := b.NewestHash
 	for {
@@ -57,8 +58,8 @@ func (b *blockchain) Blocks() []*Block {
 	return blocks
 }
 
-func (b *blockchain) recalculateDifficulty() int {
-	allBlocks := b.Blocks()
+func recalculateDifficulty(b *blockchain) int {
+	allBlocks := Blocks(b)
 	newest := allBlocks[0]
 	lastCalculated := allBlocks[difficultyIntterval - 1]
 	actualTime := (newest.Timestamp - lastCalculated.Timestamp) / 60
@@ -71,23 +72,23 @@ func (b *blockchain) recalculateDifficulty() int {
 	return b.CurrentDifficulty
 }
 
-func (b *blockchain) difficulty() int {
+func difficulty(b *blockchain) int {
 	if b.Height == 0 {
 		return defaultDifficulty
 	} else if b.Height % difficultyIntterval == 0 {
-		return b.recalculateDifficulty()
+		return recalculateDifficulty(b)
 	} else {
 		return b.CurrentDifficulty
 	}
 }
 
 // 한 블록안에서, 특정인의, TxOuts에는 있고 TxIns에는 없는 TxOuts 목록
-func (b *blockchain) UTxOutsByAddress(address string) []*UTxOut {
+func UTxOutsByAddress(address string, b *blockchain) []*UTxOut {
 	// Unspent Transaction
 	var uTxOuts []*UTxOut
 	// spent transaction outputs
 	creatorTxs := make(map[string]bool)
-	for _, block := range b.Blocks() {
+	for _, block := range Blocks(b) {
 		for _, tx := range block.Transactions {
 			// input으로 사용된 tx들 찾기
 			for _, txIn := range tx.TxIns {
@@ -98,7 +99,8 @@ func (b *blockchain) UTxOutsByAddress(address string) []*UTxOut {
 			// outs 중에서 input에 없는 것들 찾기
 			for idx, txOut := range tx.TxOuts {
 				if txOut.Owner == address {
-					if ok := creatorTxs[tx.Id]; !ok {
+					// _: value / ok: 해당 키 값의 존재여부
+					if _, ok := creatorTxs[tx.Id]; !ok {
 						uTxOut := &UTxOut{tx.Id, idx, txOut.Amount}
 						// 이미 mempool에 있는 Tx 값은 쓰면 안된다.
 						if !isOnMempool(uTxOut) {
@@ -113,8 +115,8 @@ func (b *blockchain) UTxOutsByAddress(address string) []*UTxOut {
 }
 
 // 총 자산
-func (b *blockchain) BalanceByAddress(address string) int {
-	txOuts := b.UTxOutsByAddress(address)
+func BalanceByAddress(address string, b *blockchain) int {
+	txOuts := UTxOutsByAddress(address, b)
 	var amount int = 0
 	for _, txOut := range txOuts {
 		amount += txOut.Amount

@@ -45,12 +45,34 @@ type UTxOut struct {
 	Amount int `json:"amount"`
 }
 
+func (m *mempool) AddTx(to string, amount int) error {
+	tx, err := makeTx("nico", to, amount)
+	if err != nil {
+		return err
+	}
+	m.Txs = append(m.Txs, tx)
+	return nil
+}
+
+// 승인할 트랜젝션들 가져오고, mempool 비우기
+func (m *mempool) TxToConfirm() []*Tx {
+	coinbase := makeCoinbaseTx("nico")
+	txs := m.Txs
+	txs = append(txs, coinbase)
+	m.Txs = nil
+	return txs
+}
+
 // TxIns에 해당 TxOut가 있는 Tx가 Mempool에 있는지 확인
 func isOnMempool(uTxOut *UTxOut) bool {
 	exists := false
+	Outer:
 	for _, tx := range Mempool.Txs {
 		for _, txIn := range tx.TxIns {
-			exists = txIn.TxId == uTxOut.TxId && txIn.Index == uTxOut.Index 
+			if txIn.TxId == uTxOut.TxId && txIn.Index == uTxOut.Index {
+				exists = true
+				break Outer
+			}
 		}
 	}
 	return exists
@@ -75,13 +97,13 @@ func makeCoinbaseTx(address string) *Tx {
 }
 
 func makeTx(from, to string, amount int) (*Tx, error) {
-	if Blockchain().BalanceByAddress(from) < amount {
+	if BalanceByAddress(from, Blockchain()) < amount {
 		return nil, errors.New("not enough money")
 	}
 	var txOuts []*TxOut
 	var txIns []*TxIn
 	total := 0
-	uTxOuts := Blockchain().UTxOutsByAddress(from)
+	uTxOuts := UTxOutsByAddress(from, Blockchain())
 	for _, uTx := range uTxOuts {
 		if total >= amount {
 			break
@@ -101,22 +123,4 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		TxOuts: txOuts,
 	}
 	return &tx, nil
-}
-
-func (m *mempool) AddTx(to string, amount int) error {
-	tx, err := makeTx("nico", to, amount)
-	if err != nil {
-		return err
-	}
-	m.Txs = append(m.Txs, tx)
-	return nil
-}
-
-// 승인할 트랜젝션들 가져오고, mempool 비우기
-func (m *mempool) TxToConfirm() []*Tx {
-	coinbase := makeCoinbaseTx("nico")
-	txs := m.Txs
-	txs = append(txs, coinbase)
-	m.Txs = nil
-	return txs
 }
