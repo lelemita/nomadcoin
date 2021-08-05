@@ -8,21 +8,22 @@ import (
 )
 
 const (
-	defaultDifficulty int = 2
+	defaultDifficulty   int = 2
 	difficultyIntterval int = 5
 	// 2분/1블록 목표.
 	blockInterval int = 2
-	allowedRange int = 2
+	allowedRange  int = 2
 )
 
 type blockchain struct {
-	NewestHash string `json:"newestHash"`
-	Height int `json:"height"`
-	CurrentDifficulty int `json:"currentDifficulty"`
+	NewestHash        string `json:"newestHash"`
+	Height            int    `json:"height"`
+	CurrentDifficulty int    `json:"currentDifficulty"`
 }
 
 // singleton pattern: only one instance
 var b *blockchain
+
 // 딱 한번 실행되도록 하기 (goroutin, thread 가 여러개여도..)
 var once sync.Once
 
@@ -30,8 +31,8 @@ func (b *blockchain) restore(data []byte) {
 	utils.FromBytes(b, data)
 }
 
-func (b *blockchain) AddBlock(){
-	block := createBlock(b.NewestHash, b.Height + 1, getDifficulty(b))
+func (b *blockchain) AddBlock() {
+	block := createBlock(b.NewestHash, b.Height+1, getDifficulty(b))
 	b.NewestHash = block.Hash
 	b.Height = block.Height
 	b.CurrentDifficulty = block.Difficulty
@@ -47,7 +48,7 @@ func Blocks(b *blockchain) []*Block {
 	var blocks []*Block
 	hashCursor := b.NewestHash
 	for {
-		block, _ := FindBlock(hashCursor) 
+		block, _ := FindBlock(hashCursor)
 		blocks = append(blocks, block)
 		if block.PrevHash != "" {
 			hashCursor = block.PrevHash
@@ -61,9 +62,9 @@ func Blocks(b *blockchain) []*Block {
 func recalculateDifficulty(b *blockchain) int {
 	allBlocks := Blocks(b)
 	newest := allBlocks[0]
-	lastCalculated := allBlocks[difficultyIntterval - 1]
+	lastCalculated := allBlocks[difficultyIntterval-1]
 	actualTime := (newest.Timestamp - lastCalculated.Timestamp) / 60
-	expectedTime := blockInterval * difficultyIntterval 
+	expectedTime := blockInterval * difficultyIntterval
 	if actualTime >= (expectedTime + allowedRange) {
 		return b.CurrentDifficulty - 1
 	} else if actualTime <= (expectedTime - allowedRange) {
@@ -75,7 +76,7 @@ func recalculateDifficulty(b *blockchain) int {
 func getDifficulty(b *blockchain) int {
 	if b.Height == 0 {
 		return defaultDifficulty
-	} else if b.Height % difficultyIntterval == 0 {
+	} else if b.Height%difficultyIntterval == 0 {
 		return recalculateDifficulty(b)
 	} else {
 		return b.CurrentDifficulty

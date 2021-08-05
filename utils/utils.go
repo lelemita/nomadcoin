@@ -14,7 +14,7 @@ func HandleErr(err error) {
 	}
 }
 
-func ToBytes(i interface{}) []byte{
+func ToBytes(i interface{}) []byte {
 	var aBuffer bytes.Buffer
 	encoder := gob.NewEncoder(&aBuffer)
 	HandleErr(encoder.Encode(i))

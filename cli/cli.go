@@ -16,7 +16,7 @@ func usage() {
 	fmt.Printf("-port:		Set the PORT of the server\n")
 	fmt.Printf("-mode:		Choose in 'rest', 'html' and 'all'\n\n")
 	runtime.Goexit()
-} 
+}
 
 func Start() {
 	if len(os.Args) == 1 {

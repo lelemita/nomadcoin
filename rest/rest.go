@@ -14,6 +14,7 @@ import (
 var port string
 
 type url string
+
 // type TextMarshaler interface
 func (u url) MarshalText() ([]byte, error) {
 	url := fmt.Sprintf("http://localhost%s%s", port, u)
@@ -21,52 +22,52 @@ func (u url) MarshalText() ([]byte, error) {
 }
 
 type urlDescription struct {
-	URL url `json:"url"`
-	Method string `json:"method"`
+	URL         url    `json:"url"`
+	Method      string `json:"method"`
 	Description string `json:"description"`
-	Payload string `json:"payload,omitempty"`
+	Payload     string `json:"payload,omitempty"`
 }
 
 type balanceResponse struct {
-	Address  string `json:"address"`
-	Balance  int    `json:"balance"`
+	Address string `json:"address"`
+	Balance int    `json:"balance"`
 }
 
 type errorResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-type addTxPayload struct{
-	To string
+type addTxPayload struct {
+	To     string
 	Amount int
 }
 
 func documentation(rw http.ResponseWriter, r *http.Request) {
 	data := []urlDescription{
 		{
-			URL: url("/"),
-			Method: "GET",
+			URL:         url("/"),
+			Method:      "GET",
 			Description: "See Documentation",
 		},
 		{
-			URL: url("/status"),
-			Method: "GET",
+			URL:         url("/status"),
+			Method:      "GET",
 			Description: "See the Status of the Blockchain",
 		},
 		{
-			URL: url("/blocks"),
-			Method: "POST",
+			URL:         url("/blocks"),
+			Method:      "POST",
 			Description: "Add A Block",
-			Payload: "message:string",
+			Payload:     "message:string",
 		},
 		{
-			URL: url("/blocks/{hash}"),
-			Method: "GET",
+			URL:         url("/blocks/{hash}"),
+			Method:      "GET",
 			Description: "See A Block",
 		},
 		{
-			URL: url("/balance/{address}"),
-			Method: "GET",
+			URL:         url("/balance/{address}"),
+			Method:      "GET",
 			Description: "Get TxOuts for an Address",
 		},
 	}
@@ -78,7 +79,7 @@ func status(rw http.ResponseWriter, r *http.Request) {
 }
 
 func blocks(rw http.ResponseWriter, r *http.Request) {
-	switch r.Method{
+	switch r.Method {
 	case "GET":
 		json.NewEncoder(rw).Encode(blockchain.Blocks(blockchain.Blockchain()))
 	case "POST":
@@ -122,7 +123,7 @@ func balance(rw http.ResponseWriter, r *http.Request) {
 }
 
 func mempool(rw http.ResponseWriter, r *http.Request) {
-	utils.HandleErr (json.NewEncoder(rw).Encode(blockchain.Mempool.Txs))
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Mempool.Txs))
 }
 
 func transaction(rw http.ResponseWriter, r *http.Request) {
@@ -140,9 +141,9 @@ func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
 	router := mux.NewRouter()
 	router.Use(jsonContentTypeMiddleware)
-	router.HandleFunc("/", documentation ).Methods("GET")
-	router.HandleFunc("/status", status ).Methods("GET")
-	router.HandleFunc("/blocks", blocks ).Methods("GET", "POST")
+	router.HandleFunc("/", documentation).Methods("GET")
+	router.HandleFunc("/status", status).Methods("GET")
+	router.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	router.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	router.HandleFunc("/mempool", mempool).Methods("GET")

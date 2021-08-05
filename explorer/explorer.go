@@ -12,19 +12,20 @@ import (
 const (
 	templateDir string = "explorer/templates/"
 )
+
 var templates *template.Template
 
 type homeData struct {
 	PageTitle string
-	Blocks []*blockchain.Block
+	Blocks    []*blockchain.Block
 }
 
-func home (rw http.ResponseWriter, r *http.Request) {
+func home(rw http.ResponseWriter, r *http.Request) {
 	data := homeData{"Home", blockchain.Blocks(blockchain.Blockchain())}
 	templates.ExecuteTemplate(rw, "home", data)
 }
 
-func add (rw http.ResponseWriter, r *http.Request) {
+func add(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		templates.ExecuteTemplate(rw, "add", nil)
@@ -32,7 +33,7 @@ func add (rw http.ResponseWriter, r *http.Request) {
 		blockchain.Blockchain().AddBlock()
 		http.Redirect(rw, r, "/", http.StatusPermanentRedirect)
 	}
-	
+
 }
 
 func Start(port int) {

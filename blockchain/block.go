@@ -10,13 +10,13 @@ import (
 )
 
 type Block struct {
-	Hash string `json:"hash"`
-	PrevHash string `json:"prevHash,omitempty"`
-	Height int `json:"height"`
-	Difficulty int `json:"difficulty"`
-	Nonce int `json:"nonce"`
-	Timestamp int `json:"timestamp"`
-	Transactions []*Tx `json:"transaction"`
+	Hash         string `json:"hash"`
+	PrevHash     string `json:"prevHash,omitempty"`
+	Height       int    `json:"height"`
+	Difficulty   int    `json:"difficulty"`
+	Nonce        int    `json:"nonce"`
+	Timestamp    int    `json:"timestamp"`
+	Transactions []*Tx  `json:"transaction"`
 }
 
 func (b *Block) persist() {
@@ -40,7 +40,7 @@ func FindBlock(hash string) (*Block, error) {
 	}
 }
 
-func (b * Block) mine() {
+func (b *Block) mine() {
 	target := strings.Repeat("0", b.Difficulty)
 	for {
 		b.Timestamp = int(time.Now().Unix())
@@ -54,13 +54,13 @@ func (b * Block) mine() {
 	}
 }
 
-func createBlock(prevHash string, height int, diff int) *Block{
+func createBlock(prevHash string, height int, diff int) *Block {
 	block := Block{
-		Hash: "", 
-		PrevHash: prevHash,
-		Height: height,
+		Hash:       "",
+		PrevHash:   prevHash,
+		Height:     height,
 		Difficulty: diff,
-		Nonce: 0,
+		Nonce:      0,
 	}
 	block.mine()
 	// mining이 오래걸리므로, 트랜젝션은 그 뒤에 더함
@@ -69,4 +69,3 @@ func createBlock(prevHash string, height int, diff int) *Block{
 	block.persist()
 	return &block
 }
-
