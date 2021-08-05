@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
-	"fmt"
 	"os"
 
 	"github.com/lelemita/nomadcoin/utils"
@@ -17,6 +16,7 @@ const (
 
 type wallet struct {
 	privateKey *ecdsa.PrivateKey
+	address    string //public key
 }
 
 var w *wallet
@@ -40,20 +40,33 @@ func persistKey(key *ecdsa.PrivateKey) {
 
 }
 
+func restoreKey() (key *ecdsa.PrivateKey) {
+	keyAsBytes, err := os.ReadFile(fileName)
+	utils.HandleErr(err)
+	key, err = x509.ParseECPrivateKey(keyAsBytes)
+	utils.HandleErr(err)
+	return
+}
+
+// Address(public) from (private) Key
+func aFromK(key *ecdsa.PrivateKey) string {
+	return "not yet"
+}
+
 func Wallet() *wallet {
 	if w == nil {
 		w = &wallet{}
 		// has a wallet already?
 		if hasWalletFile() {
 			// yes -> restore from file
-			fmt.Println("yes")
+			w.privateKey = restoreKey()
 		} else {
 			// no -> create prv key, save to file
 			key := createPrivKey()
 			persistKey(key)
 			w.privateKey = key
 		}
-
+		w.address = aFromK(w.privateKey)
 	}
 	return w
 }

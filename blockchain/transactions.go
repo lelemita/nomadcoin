@@ -18,31 +18,31 @@ type mempool struct {
 var Mempool *mempool = &mempool{}
 
 type Tx struct {
-	Id string `json:"id"`
-	Timestamp int `json:"timestamp"`
-	TxIns []*TxIn `json:"txIns"`
-	TxOuts []*TxOut `json:"txOuts"`
+	Id        string   `json:"id"`
+	Timestamp int      `json:"timestamp"`
+	TxIns     []*TxIn  `json:"txIns"`
+	TxOuts    []*TxOut `json:"txOuts"`
 }
 
 func (t *Tx) getId() {
 	t.Id = utils.Hash(t)
-} 
+}
 
 type TxIn struct {
-	TxId string `json:"txId"`
-	Index int `json:"index"`
+	TxId  string `json:"txId"`
+	Index int    `json:"index"`
 	Owner string `json:"owner"`
 }
 
 type TxOut struct {
-	Owner string `json:"owner"`
-	Amount int `json:"amount"`
+	Owner  string `json:"owner"`
+	Amount int    `json:"amount"`
 }
 
 type UTxOut struct {
-	TxId string `json:"txId"`
-	Index int `json:"index"`
-	Amount int `json:"amount"`
+	TxId   string `json:"txId"`
+	Index  int    `json:"index"`
+	Amount int    `json:"amount"`
 }
 
 func (m *mempool) AddTx(to string, amount int) error {
@@ -64,33 +64,32 @@ func (m *mempool) TxToConfirm() []*Tx {
 }
 
 // TxIns에 해당 TxOut가 있는 Tx가 Mempool에 있는지 확인
-func isOnMempool(uTxOut *UTxOut) bool {
-	exists := false
-	Outer:
+func isOnMempool(uTxOut *UTxOut) (isExists bool) {
+Outer:
 	for _, tx := range Mempool.Txs {
 		for _, txIn := range tx.TxIns {
 			if txIn.TxId == uTxOut.TxId && txIn.Index == uTxOut.Index {
-				exists = true
+				isExists = true
 				break Outer
 			}
 		}
 	}
-	return exists
+	return
 }
 
 // 돈 찍기: 채굴자를 주소로 삼는 코인베이스 거래내역을 생성해서 Tx포인터를 반환
 func makeCoinbaseTx(address string) *Tx {
-	txIns := []*TxIn {
+	txIns := []*TxIn{
 		{"", -1, "COINBASE"},
 	}
-	txOuts := []*TxOut {
+	txOuts := []*TxOut{
 		{address, minerReward},
 	}
-	tx := Tx {
-		Id: "",
+	tx := Tx{
+		Id:        "",
 		Timestamp: int(time.Now().Unix()),
-		TxIns: txIns,
-		TxOuts: txOuts,
+		TxIns:     txIns,
+		TxOuts:    txOuts,
 	}
 	tx.getId()
 	return &tx
@@ -117,10 +116,10 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 	}
 	txOuts = append(txOuts, &TxOut{to, amount})
 	tx := Tx{
-		Id: "",
+		Id:        "",
 		Timestamp: int(time.Now().Unix()),
-		TxIns: txIns,
-		TxOuts: txOuts,
+		TxIns:     txIns,
+		TxOuts:    txOuts,
 	}
 	return &tx, nil
 }
