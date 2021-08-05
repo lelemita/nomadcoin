@@ -59,6 +59,22 @@ func Blocks(b *blockchain) []*Block {
 	return blocks
 }
 
+func Txs(b *blockchain) (txs []*Tx) {
+	for _, block := range Blocks(b) {
+		txs = append(txs, block.Transactions...)
+	}
+	return
+}
+
+func FindTx(b *blockchain, targetId string) *Tx {
+	for _, tx := range Txs(b) {
+		if tx.Id == targetId {
+			return tx
+		}
+	}
+	return nil
+}
+
 func recalculateDifficulty(b *blockchain) int {
 	allBlocks := Blocks(b)
 	newest := allBlocks[0]
@@ -93,13 +109,16 @@ func UTxOutsByAddress(address string, b *blockchain) []*UTxOut {
 		for _, tx := range block.Transactions {
 			// input으로 사용된 tx들 찾기
 			for _, txIn := range tx.TxIns {
-				if txIn.Owner == address {
+				if txIn.Signature == "COINBASE" {
+					break
+				}
+				if FindTx(b, txIn.TxId).TxOuts[txIn.Index].Address == address {
 					creatorTxs[txIn.TxId] = true
 				}
 			}
 			// outs 중에서 input에 없는 것들 찾기
 			for idx, txOut := range tx.TxOuts {
-				if txOut.Owner == address {
+				if txOut.Address == address {
 					// _: value / ok: 해당 키 값의 존재여부
 					if _, ok := creatorTxs[tx.Id]; !ok {
 						uTxOut := &UTxOut{tx.Id, idx, txOut.Amount}

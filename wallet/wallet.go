@@ -73,10 +73,10 @@ func restoreBigInts(signature string) (*big.Int, *big.Int, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	BigA, bigB := big.Int{}, big.Int{}
-	BigA.SetBytes(bytes[:len(bytes)/2])
+	bigA, bigB := big.Int{}, big.Int{}
+	bigA.SetBytes(bytes[:len(bytes)/2])
 	bigB.SetBytes(bytes[len(bytes)/2:])
-	return &BigA, &bigB, nil
+	return &bigA, &bigB, nil
 }
 
 func Verify(signature, payload, address string) bool {
@@ -91,7 +91,8 @@ func Verify(signature, payload, address string) bool {
 	publicKey := ecdsa.PublicKey{
 		Curve: elliptic.P256(),
 		X:     x,
-		Y:     y}
+		Y:     y,
+	}
 	utils.HandleErr(err)
 	return ecdsa.Verify(&publicKey, hash, r, s)
 }

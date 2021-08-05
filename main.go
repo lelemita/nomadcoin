@@ -1,7 +1,11 @@
 package main
 
-import "github.com/lelemita/nomadcoin/wallet"
+import (
+	"github.com/lelemita/nomadcoin/cli"
+	"github.com/lelemita/nomadcoin/db"
+)
 
 func main() {
-	wallet.Wallet()
+	defer db.DB().Close()
+	cli.Start()
 }

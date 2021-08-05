@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lelemita/nomadcoin/blockchain"
 	"github.com/lelemita/nomadcoin/utils"
+	"github.com/lelemita/nomadcoin/wallet"
 )
 
 var port string
@@ -31,6 +32,10 @@ type urlDescription struct {
 type balanceResponse struct {
 	Address string `json:"address"`
 	Balance int    `json:"balance"`
+}
+
+type myWalletResponse struct {
+	Address string `json:"address"`
 }
 
 type errorResponse struct {
@@ -137,6 +142,15 @@ func transaction(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusCreated)
 }
 
+func myWallet(rw http.ResponseWriter, r *http.Request) {
+	address := wallet.Wallet().Address
+	json.NewEncoder(rw).Encode(myWalletResponse{Address: address})
+	// 익명 구조체
+	// json.NewEncoder(rw).Encode(struct {
+	// 	Address string `json:"address"`
+	// }{Address: address})
+}
+
 func Start(aPort int) {
 	port = fmt.Sprintf(":%d", aPort)
 	router := mux.NewRouter()
@@ -148,6 +162,7 @@ func Start(aPort int) {
 	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	router.HandleFunc("/mempool", mempool).Methods("GET")
 	router.HandleFunc("/transaction", transaction).Methods("POST")
+	router.HandleFunc("/wallet", myWallet)
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
