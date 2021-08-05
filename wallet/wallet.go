@@ -5,6 +5,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/hex"
+	"math/big"
 	"os"
 
 	"github.com/lelemita/nomadcoin/utils"
@@ -16,7 +18,7 @@ const (
 
 type wallet struct {
 	privateKey *ecdsa.PrivateKey
-	address    string //public key
+	Address    string //public key
 }
 
 var w *wallet
@@ -48,9 +50,50 @@ func restoreKey() (key *ecdsa.PrivateKey) {
 	return
 }
 
+func encodeBigInts(a, b *big.Int) string {
+	z := append(a.Bytes(), b.Bytes()...)
+	return hex.EncodeToString(z)
+}
+
 // Address(public) from (private) Key
 func aFromK(key *ecdsa.PrivateKey) string {
-	return "not yet"
+	return encodeBigInts(key.X, key.Y)
+}
+
+func Sign(payload string, w *wallet) string {
+	payloadAsB, err := hex.DecodeString(payload)
+	utils.HandleErr(err)
+	r, s, err := ecdsa.Sign(rand.Reader, w.privateKey, payloadAsB)
+	utils.HandleErr(err)
+	return encodeBigInts(r, s)
+}
+
+func restoreBigInts(signature string) (*big.Int, *big.Int, error) {
+	bytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return nil, nil, err
+	}
+	BigA, bigB := big.Int{}, big.Int{}
+	BigA.SetBytes(bytes[:len(bytes)/2])
+	bigB.SetBytes(bytes[len(bytes)/2:])
+	return &BigA, &bigB, nil
+}
+
+func Verify(signature, payload, address string) bool {
+	// signature
+	r, s, err := restoreBigInts(signature)
+	utils.HandleErr(err)
+	// hash
+	hash, err := hex.DecodeString(payload)
+	utils.HandleErr(err)
+	// public key
+	x, y, err := restoreBigInts(address)
+	publicKey := ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     x,
+		Y:     y}
+	utils.HandleErr(err)
+	return ecdsa.Verify(&publicKey, hash, r, s)
 }
 
 func Wallet() *wallet {
@@ -66,7 +109,7 @@ func Wallet() *wallet {
 			persistKey(key)
 			w.privateKey = key
 		}
-		w.address = aFromK(w.privateKey)
+		w.Address = aFromK(w.privateKey)
 	}
 	return w
 }

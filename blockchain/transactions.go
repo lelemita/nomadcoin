@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/lelemita/nomadcoin/utils"
+	"github.com/lelemita/nomadcoin/wallet"
 )
 
 const (
@@ -46,7 +47,7 @@ type UTxOut struct {
 }
 
 func (m *mempool) AddTx(to string, amount int) error {
-	tx, err := makeTx("nico", to, amount)
+	tx, err := makeTx(wallet.Wallet().Address, to, amount)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (m *mempool) AddTx(to string, amount int) error {
 
 // 승인할 트랜젝션들 가져오고, mempool 비우기
 func (m *mempool) TxToConfirm() []*Tx {
-	coinbase := makeCoinbaseTx("nico")
+	coinbase := makeCoinbaseTx(wallet.Wallet().Address)
 	txs := m.Txs
 	txs = append(txs, coinbase)
 	m.Txs = nil
