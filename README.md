@@ -1,6 +1,6 @@
 # Nomadcoin
 
-Making a Cryptocurrency using the Go programming language.
+Making a Cryptocurrency using the Go programming language.  
 https://nomadcoders.co/nomadcoin/lobby
 
 ### Features
