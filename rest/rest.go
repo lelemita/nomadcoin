@@ -177,8 +177,8 @@ func Start(aPort int) {
 	router.HandleFunc("/balance/{address}", balance).Methods("GET")
 	router.HandleFunc("/mempool", mempool).Methods("GET")
 	router.HandleFunc("/transaction", transaction).Methods("POST")
-	router.HandleFunc("/wallet", myWallet)
-	router.HandleFunc("/ws", p2p.Upgrade)
+	router.HandleFunc("/wallet", myWallet).Methods("GET")
+	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
