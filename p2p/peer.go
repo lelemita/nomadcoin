@@ -50,7 +50,7 @@ func (p *peer) read() {
 			fmt.Println(err)
 			break
 		}
-		fmt.Println(m.Kind)
+		handleMsg(&m, p)
 	}
 }
 
