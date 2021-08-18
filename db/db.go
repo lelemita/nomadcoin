@@ -1,15 +1,15 @@
 package db
 
 import (
-	"github.com/boltdb/bolt"
 	"github.com/lelemita/nomadcoin/utils"
+	bolt "go.etcd.io/bbolt"
 )
 
 const (
-	dbName = "blockchain.db"
-	dataBucket = "data"
+	dbName       = "blockchain.db"
+	dataBucket   = "data"
 	blocksBucket = "blocks"
-	checkpoint = "checkpoint"
+	checkpoint   = "checkpoint"
 )
 
 // singleton pattern
