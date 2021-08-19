@@ -43,7 +43,6 @@ func persistBlockchain(b *blockchain) {
 	db.SaveCheckpoint(utils.ToBytes(b))
 }
 
-// struct를 mutate시키지 않으므로 단순 function으로 구현
 func Blocks(b *blockchain) []*Block {
 	var blocks []*Block
 	hashCursor := b.NewestHash

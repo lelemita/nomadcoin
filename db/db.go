@@ -1,12 +1,15 @@
 package db
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/lelemita/nomadcoin/utils"
 	bolt "go.etcd.io/bbolt"
 )
 
 const (
-	dbName       = "blockchain.db"
+	dbName       = "blockchain"
 	dataBucket   = "data"
 	blocksBucket = "blocks"
 	checkpoint   = "checkpoint"
@@ -15,10 +18,16 @@ const (
 // singleton pattern
 var db *bolt.DB
 
+// 동기화 테스트 위해서, 노드마다 다른 DB파일 쓰기
+func getDbName() string {
+	port := os.Args[2][6:]
+	return fmt.Sprintf("%s_%s.db", dbName, port)
+}
+
 func DB() *bolt.DB {
 	if db == nil {
 		// init db
-		dbPointer, err := bolt.Open(dbName, 0600, nil)
+		dbPointer, err := bolt.Open(getDbName(), 0600, nil)
 		db = dbPointer
 		utils.HandleErr(err)
 		// transaction to make buckets(tables)
@@ -26,7 +35,7 @@ func DB() *bolt.DB {
 			_, err := t.CreateBucketIfNotExists([]byte(dataBucket))
 			utils.HandleErr(err)
 			_, err = t.CreateBucketIfNotExists([]byte(blocksBucket))
-			return nil
+			return err
 		})
 		utils.HandleErr(err)
 	}

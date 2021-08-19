@@ -13,13 +13,13 @@ import (
 	"github.com/lelemita/nomadcoin/wallet"
 )
 
-var port string
+var address string
 
 type url string
 
 // type TextMarshaler interface
 func (u url) MarshalText() ([]byte, error) {
-	url := fmt.Sprintf("http://localhost%s%s", port, u)
+	url := fmt.Sprintf("http://localhost%s%s", address, u)
 	return []byte(url), nil
 }
 
@@ -175,7 +175,7 @@ func peers(rw http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var payload addPeerPayload
 		json.NewDecoder(r.Body).Decode(&payload)
-		p2p.AddPeer(payload.Address, payload.Port, port)
+		p2p.AddPeer(payload.Address, payload.Port, address)
 		rw.WriteHeader(http.StatusOK)
 	case "GET":
 		json.NewEncoder(rw).Encode(p2p.AllPeers(&p2p.Peers))
@@ -183,7 +183,7 @@ func peers(rw http.ResponseWriter, r *http.Request) {
 }
 
 func Start(aPort int) {
-	port = fmt.Sprintf(":%d", aPort)
+	address = fmt.Sprintf("127.0.0.1:%d", aPort)
 	router := mux.NewRouter()
 	router.Use(jsonContentTypeMiddleware, loggerMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
@@ -196,6 +196,6 @@ func Start(aPort int) {
 	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
 	router.HandleFunc("/peers", peers).Methods("GET", "POST")
-	fmt.Printf("Listening on http://localhost%s\n", port)
-	log.Fatal(http.ListenAndServe(port, router))
+	fmt.Printf("Listening on http://%s\n", address)
+	log.Fatal(http.ListenAndServe(address, router))
 }
