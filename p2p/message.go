@@ -15,6 +15,7 @@ const (
 	MessageAllBlocksRequest
 	MessageAllBlocksResponse
 	MessageNewBlockNotify
+	MessageNewTxNotify
 )
 
 type Message struct {
@@ -52,6 +53,11 @@ func notifyNewBlock(p *peer, b *blockchain.Block) {
 	p.inbox <- makeMessage(MessageNewBlockNotify, b)
 }
 
+func notifyNewTx(p *peer, tx *blockchain.Tx) {
+	fmt.Printf("Notify Tx to %s\n", p.port)
+	p.inbox <- makeMessage(MessageNewTxNotify, tx)
+}
+
 func handleMsg(m *Message, p *peer) {
 	switch m.Kind {
 	case MessageNewestBlock:
@@ -82,5 +88,10 @@ func handleMsg(m *Message, p *peer) {
 		var payload *blockchain.Block
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		blockchain.Blockchain().AddPeerBlock(payload)
+	case MessageNewTxNotify:
+		fmt.Printf("Received New Transaction from %s\n", p.key)
+		var payload *blockchain.Tx
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		blockchain.Mempool().AddPeerTx(payload)
 	}
 }

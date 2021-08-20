@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/lelemita/nomadcoin/utils"
@@ -14,9 +15,18 @@ const (
 
 type mempool struct {
 	Txs []*Tx
+	m   sync.Mutex
 }
 
-var Mempool *mempool = &mempool{}
+var mem *mempool = &mempool{}
+var memOnce sync.Once
+
+func Mempool() *mempool {
+	memOnce.Do(func() {
+		mem = &mempool{}
+	})
+	return mem
+}
 
 type Tx struct {
 	Id        string   `json:"id"`
@@ -72,13 +82,13 @@ func validate(tx *Tx) bool {
 	return isValid
 }
 
-func (m *mempool) AddTx(to string, amount int) error {
+func (m *mempool) AddTx(to string, amount int) (*Tx, error) {
 	tx, err := makeTx(wallet.Wallet().Address, to, amount)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	m.Txs = append(m.Txs, tx)
-	return nil
+	return tx, nil
 }
 
 // 승인할 트랜젝션들 가져오고, mempool 비우기
@@ -93,7 +103,7 @@ func (m *mempool) TxToConfirm() []*Tx {
 // TxIns에 해당 TxOut가 있는 Tx가 Mempool에 있는지 확인
 func isOnMempool(uTxOut *UTxOut) (isExists bool) {
 Outer:
-	for _, tx := range Mempool.Txs {
+	for _, tx := range Mempool().Txs {
 		for _, txIn := range tx.TxIns {
 			if txIn.TxId == uTxOut.TxId && txIn.Index == uTxOut.Index {
 				isExists = true
@@ -156,4 +166,10 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		return nil, ErrorNotValid
 	}
 	return &tx, nil
+}
+
+func (m *mempool) AddPeerTx(tx *Tx) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Txs = append(m.Txs, tx)
 }

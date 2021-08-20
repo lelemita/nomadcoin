@@ -40,3 +40,9 @@ func BroadcastNewBlock(b *blockchain.Block) {
 		notifyNewBlock(p, b)
 	}
 }
+
+func BroadcastNewTx(tx *blockchain.Tx) {
+	for _, p := range Peers.v {
+		notifyNewTx(p, tx)
+	}
+}

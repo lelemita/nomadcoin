@@ -147,19 +147,20 @@ func balance(rw http.ResponseWriter, r *http.Request) {
 }
 
 func mempool(rw http.ResponseWriter, r *http.Request) {
-	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Mempool.Txs))
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Mempool().Txs))
 }
 
 func transaction(rw http.ResponseWriter, r *http.Request) {
 	var payload addTxPayload
 	// Decoder가 r.Body의 내용을 paload struct로 변환
 	utils.HandleErr(json.NewDecoder(r.Body).Decode(&payload))
-	err := blockchain.Mempool.AddTx(payload.To, payload.Amount)
+	tx, err := blockchain.Mempool().AddTx(payload.To, payload.Amount)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(rw).Encode(errorResponse{err.Error()})
 		return
 	}
+	go p2p.BroadcastNewTx(tx)
 	rw.WriteHeader(http.StatusCreated)
 }
 

@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -157,6 +158,7 @@ func BalanceByAddress(address string, b *blockchain) int {
 	for _, txOut := range txOuts {
 		amount += txOut.Amount
 	}
+	fmt.Printf(">>> amount: %d\n", amount)
 	return amount
 }
 

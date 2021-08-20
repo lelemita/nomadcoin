@@ -64,7 +64,7 @@ func createBlock(prevHash string, height int, diff int) *Block {
 	}
 	block.mine()
 	// mining이 오래걸리므로, 트랜젝션은 그 뒤에 더함
-	block.Transactions = Mempool.TxToConfirm()
+	block.Transactions = Mempool().TxToConfirm()
 	// Block을 []byte로 바꿔서 DB에 저장
 	block.persist()
 	return &block
