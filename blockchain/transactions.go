@@ -128,6 +128,7 @@ func makeCoinbaseTx(address string) *Tx {
 		TxIns:     txIns,
 		TxOuts:    txOuts,
 	}
+	tx.getId()
 	return &tx
 }
 
@@ -146,7 +147,8 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		if total >= amount {
 			break
 		}
-		txIns = append(txIns, &TxIn{uTx.TxId, uTx.Index, from})
+		txIn := &TxIn{uTx.TxId, uTx.Index, from}
+		txIns = append(txIns, txIn)
 		total += uTx.Amount
 	}
 	// 잔돈 계산
@@ -154,7 +156,7 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 		txOuts = append(txOuts, &TxOut{from, change})
 	}
 	txOuts = append(txOuts, &TxOut{to, amount})
-	tx := Tx{
+	tx := &Tx{
 		Id:        "",
 		Timestamp: int(time.Now().Unix()),
 		TxIns:     txIns,
@@ -162,10 +164,10 @@ func makeTx(from, to string, amount int) (*Tx, error) {
 	}
 	tx.getId()
 	tx.sign()
-	if !validate(&tx) {
+	if !validate(tx) {
 		return nil, ErrorNotValid
 	}
-	return &tx, nil
+	return tx, nil
 }
 
 func (m *mempool) AddPeerTx(tx *Tx) {
