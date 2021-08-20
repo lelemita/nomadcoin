@@ -159,3 +159,17 @@ func Blockchain() *blockchain {
 	// fmt.Printf("Height: %d\nNewest Hash: %s\n", b.Height, b.NewestHash)
 	return b
 }
+
+func (b *blockchain) Replace(newBlocks []*Block) {
+	// update blockchain
+	b.CurrentDifficulty = newBlocks[0].Difficulty
+	b.Height = len(newBlocks)
+	b.NewestHash = newBlocks[0].Hash
+	persistBlockchain(b)
+	// db 파일의 block bucket 비움
+	db.EmptyBlocks()
+	// 블록들 DB에 저장
+	for _, block := range newBlocks {
+		block.persist()
+	}
+}

@@ -70,5 +70,6 @@ func handleMsg(m *Message, p *peer) {
 		var payload []*blockchain.Block
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		// todo: 데이터베이스 업데이트 하기
+		blockchain.Blockchain().Replace(payload)
 	}
 }
