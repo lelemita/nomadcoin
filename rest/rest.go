@@ -13,13 +13,13 @@ import (
 	"github.com/lelemita/nomadcoin/wallet"
 )
 
-var address string
+var port string
 
 type url string
 
 // type TextMarshaler interface
 func (u url) MarshalText() ([]byte, error) {
-	url := fmt.Sprintf("http://localhost%s%s", address, u)
+	url := fmt.Sprintf("http://localhost%s%s", port, u)
 	return []byte(url), nil
 }
 
@@ -90,7 +90,7 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 }
 
 func status(rw http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(rw).Encode(blockchain.Blockchain())
+	blockchain.Status(blockchain.Blockchain(), rw)
 }
 
 func blocks(rw http.ResponseWriter, r *http.Request) {
@@ -98,8 +98,10 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	case "GET":
 		json.NewEncoder(rw).Encode(blockchain.Blocks(blockchain.Blockchain()))
 	case "POST":
-		blockchain.Blockchain().AddBlock()
+		newBlock := blockchain.Blockchain().AddBlock()
+		p2p.BroadcastNewBlock(newBlock)
 		rw.WriteHeader(http.StatusCreated)
+
 	}
 }
 
@@ -175,7 +177,7 @@ func peers(rw http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var payload addPeerPayload
 		json.NewDecoder(r.Body).Decode(&payload)
-		p2p.AddPeer(payload.Address, payload.Port, address)
+		p2p.AddPeer(payload.Address, payload.Port, port)
 		rw.WriteHeader(http.StatusOK)
 	case "GET":
 		json.NewEncoder(rw).Encode(p2p.AllPeers(&p2p.Peers))
@@ -183,7 +185,8 @@ func peers(rw http.ResponseWriter, r *http.Request) {
 }
 
 func Start(aPort int) {
-	address = fmt.Sprintf("127.0.0.1:%d", aPort)
+	port = fmt.Sprintf(":%d", aPort)
+	ip_port := fmt.Sprintf("127.0.0.1%s", port)
 	router := mux.NewRouter()
 	router.Use(jsonContentTypeMiddleware, loggerMiddleware)
 	router.HandleFunc("/", documentation).Methods("GET")
@@ -196,6 +199,6 @@ func Start(aPort int) {
 	router.HandleFunc("/wallet", myWallet).Methods("GET")
 	router.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
 	router.HandleFunc("/peers", peers).Methods("GET", "POST")
-	fmt.Printf("Listening on http://%s\n", address)
-	log.Fatal(http.ListenAndServe(address, router))
+	fmt.Printf("Listening on http://%s\n", ip_port)
+	log.Fatal(http.ListenAndServe(ip_port, router))
 }

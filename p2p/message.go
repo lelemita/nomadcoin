@@ -14,6 +14,7 @@ const (
 	MessageNewestBlock MessageKind = iota
 	MessageAllBlocksRequest
 	MessageAllBlocksResponse
+	MessageNewBlockNotify
 )
 
 type Message struct {
@@ -47,6 +48,10 @@ func sendAllBlocks(p *peer) {
 	p.inbox <- makeMessage(MessageAllBlocksResponse, blocks)
 }
 
+func notifyNewBlock(p *peer, b *blockchain.Block) {
+	p.inbox <- makeMessage(MessageNewBlockNotify, b)
+}
+
 func handleMsg(m *Message, p *peer) {
 	switch m.Kind {
 	case MessageNewestBlock:
@@ -71,5 +76,11 @@ func handleMsg(m *Message, p *peer) {
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		// todo: 데이터베이스 업데이트 하기
 		blockchain.Blockchain().Replace(payload)
+	case MessageNewBlockNotify:
+		// todo: validate the hash, timestamp, Txs, signatures......
+		fmt.Printf("Received New Born Block from %s\n", p.key)
+		var payload *blockchain.Block
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		blockchain.Blockchain().AddPeerBlock(payload)
 	}
 }
