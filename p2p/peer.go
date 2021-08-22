@@ -69,7 +69,7 @@ func initPeer(conn *websocket.Conn, address, port string) *peer {
 	Peers.m.Lock()
 	defer Peers.m.Unlock()
 	key := fmt.Sprintf("%s:%s", address, port)
-	fmt.Println(">>>", key)
+	fmt.Println(">>> initPeer: ", key)
 	p := &peer{
 		key:     key,
 		address: address,

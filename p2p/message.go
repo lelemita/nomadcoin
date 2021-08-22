@@ -3,6 +3,7 @@ package p2p
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/lelemita/nomadcoin/blockchain"
 	"github.com/lelemita/nomadcoin/utils"
@@ -16,6 +17,7 @@ const (
 	MessageAllBlocksResponse
 	MessageNewBlockNotify
 	MessageNewTxNotify
+	MessageNewPeerNotify
 )
 
 type Message struct {
@@ -54,8 +56,13 @@ func notifyNewBlock(p *peer, b *blockchain.Block) {
 }
 
 func notifyNewTx(p *peer, tx *blockchain.Tx) {
-	fmt.Printf("Notify Tx to %s\n", p.port)
+	fmt.Printf("Notify New Tx to %s\n", p.port)
 	p.inbox <- makeMessage(MessageNewTxNotify, tx)
+}
+
+func notifyNewPeer(p *peer, address string) {
+	fmt.Printf("Notify New Peer to %s\n", p.port)
+	p.inbox <- makeMessage(MessageNewPeerNotify, address)
 }
 
 func handleMsg(m *Message, p *peer) {
@@ -93,5 +100,12 @@ func handleMsg(m *Message, p *peer) {
 		var payload *blockchain.Tx
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		blockchain.Mempool().AddPeerTx(payload)
+	case MessageNewPeerNotify:
+		fmt.Printf("Received New Peer from %s\n", p.key)
+		var payload string
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		fmt.Printf("I will now /ws upgrade %s\n", payload)
+		parts := strings.Split(payload, ":")
+		AddPeer(parts[0], parts[1], parts[2], false)
 	}
 }
