@@ -43,15 +43,19 @@ func (b *blockchain) AddBlock() *Block {
 	return block
 }
 
-func (b *blockchain) AddPeerBlock(block *Block) {
+func (b *blockchain) AddPeerBlock(newBlock *Block) {
 	b.m.Lock()
 	defer b.m.Unlock()
-	b.Height = block.Height
-	b.NewestHash = block.Hash
-	b.CurrentDifficulty = block.Difficulty
-	block.persist()
+
+	b.Height = newBlock.Height
+	b.NewestHash = newBlock.Hash
+	b.CurrentDifficulty = newBlock.Difficulty
+
+	persistBlock(newBlock)
 	persistBlockchain(b)
+
 	// mempoop error 발생 예정???
+
 }
 
 func persistBlockchain(b *blockchain) {
@@ -195,6 +199,6 @@ func (b *blockchain) Replace(newBlocks []*Block) {
 	db.EmptyBlocks()
 	// 블록들 DB에 저장
 	for _, block := range newBlocks {
-		block.persist()
+		persistBlock(block)
 	}
 }
