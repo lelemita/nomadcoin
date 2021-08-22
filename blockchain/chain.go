@@ -45,7 +45,9 @@ func (b *blockchain) AddBlock() *Block {
 
 func (b *blockchain) AddPeerBlock(newBlock *Block) {
 	b.m.Lock()
+	mem.m.Lock()
 	defer b.m.Unlock()
+	defer mem.m.Unlock()
 
 	b.Height = newBlock.Height
 	b.NewestHash = newBlock.Hash
@@ -54,8 +56,12 @@ func (b *blockchain) AddPeerBlock(newBlock *Block) {
 	persistBlock(newBlock)
 	persistBlockchain(b)
 
-	// mempoop error 발생 예정???
-
+	for _, tx := range newBlock.Transactions {
+		_, ok := mem.Txs[tx.Id]
+		if ok {
+			delete(mem.Txs, tx.Id)
+		}
+	}
 }
 
 func persistBlockchain(b *blockchain) {
