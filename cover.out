@@ -1,10 +1,10 @@
 mode: set
-github.com/lelemita/nomadcoin/utils/utils.go:14.27,15.16 1 1
-github.com/lelemita/nomadcoin/utils/utils.go:15.16,17.3 1 0
-github.com/lelemita/nomadcoin/utils/utils.go:20.36,25.2 4 1
-github.com/lelemita/nomadcoin/utils/utils.go:28.50,31.2 2 0
-github.com/lelemita/nomadcoin/utils/utils.go:34.33,38.2 3 1
-github.com/lelemita/nomadcoin/utils/utils.go:40.51,42.18 2 0
-github.com/lelemita/nomadcoin/utils/utils.go:45.2,45.13 1 0
-github.com/lelemita/nomadcoin/utils/utils.go:42.18,44.3 1 0
-github.com/lelemita/nomadcoin/utils/utils.go:48.35,52.2 3 0
+github.com/lelemita/nomadcoin/utils/utils.go:16.27,17.16 1 1
+github.com/lelemita/nomadcoin/utils/utils.go:17.16,19.3 1 1
+github.com/lelemita/nomadcoin/utils/utils.go:22.36,27.2 4 1
+github.com/lelemita/nomadcoin/utils/utils.go:30.50,33.2 2 0
+github.com/lelemita/nomadcoin/utils/utils.go:36.33,40.2 3 1
+github.com/lelemita/nomadcoin/utils/utils.go:42.51,44.18 2 1
+github.com/lelemita/nomadcoin/utils/utils.go:47.2,47.13 1 1
+github.com/lelemita/nomadcoin/utils/utils.go:44.18,46.3 1 1
+github.com/lelemita/nomadcoin/utils/utils.go:50.35,54.2 3 0
