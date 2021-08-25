@@ -26,3 +26,9 @@ go test -v -coverprofile cover.out  ./...
 go tool cover -html='cover.out'
 # 녹색은 테스트 통과한 거, 적색은 안된거
 ```
+
+### Documents
+```bash
+# go get golang.org/x/tools/cmd/godoc
+# godoc -http=:6060
+```
