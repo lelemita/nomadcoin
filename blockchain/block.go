@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lelemita/nomadcoin/db"
 	"github.com/lelemita/nomadcoin/utils"
 )
 
@@ -20,7 +19,7 @@ type Block struct {
 }
 
 func persistBlock(b *Block) {
-	db.SaveBlock(b.Hash, utils.ToBytes(b))
+	dbStorage.SaveBlock(b.Hash, utils.ToBytes(b))
 }
 
 var ErrNotFound = errors.New("Block not found")
@@ -30,7 +29,7 @@ func (b *Block) restore(data []byte) {
 }
 
 func FindBlock(hash string) (*Block, error) {
-	blockByte := db.Block(hash)
+	blockByte := dbStorage.FindBlock(hash)
 	if blockByte == nil {
 		return nil, ErrNotFound
 	} else {
@@ -62,9 +61,10 @@ func createBlock(prevHash string, height int, diff int) *Block {
 		Difficulty: diff,
 		Nonce:      0,
 	}
-	block.mine()
-	// mining이 오래걸리므로, 트랜젝션은 그 뒤에 더함
+	// mining이 오래걸리므로, 트랜젝션은 그 뒤에 더함 --> 틀림?
+	// 트랜젝션들도 해쉬 되어야 해서 순서 바꿈? (13.11)
 	block.Transactions = Mempool().TxToConfirm()
+	block.mine()
 	// Block을 []byte로 바꿔서 DB에 저장
 	persistBlock(&block)
 	return &block

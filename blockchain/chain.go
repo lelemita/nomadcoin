@@ -24,6 +24,16 @@ type blockchain struct {
 	m                 sync.Mutex
 }
 
+type storage interface {
+	FindBlock(hash string) []byte
+	SaveBlock(hash string, data []byte)
+	SaveChain(data []byte)
+	LoadChain() []byte
+	DeleteAllBlocks()
+}
+
+var dbStorage storage = db.DB{}
+
 // singleton pattern: only one instance
 var b *blockchain
 
@@ -65,7 +75,7 @@ func (b *blockchain) AddPeerBlock(newBlock *Block) {
 }
 
 func persistBlockchain(b *blockchain) {
-	db.SaveCheckpoint(utils.ToBytes(b))
+	dbStorage.SaveChain(utils.ToBytes(b))
 }
 
 func Blocks(b *blockchain) []*Block {
@@ -176,7 +186,7 @@ func Blockchain() *blockchain {
 		b = &blockchain{
 			Height: 0,
 		}
-		checkpoint := db.Checkpoint()
+		checkpoint := dbStorage.LoadChain()
 		if checkpoint == nil {
 			b.AddBlock()
 		} else {
@@ -202,7 +212,7 @@ func (b *blockchain) Replace(newBlocks []*Block) {
 	b.NewestHash = newBlocks[0].Hash
 	persistBlockchain(b)
 	// db 파일의 block bucket 비움
-	db.EmptyBlocks()
+	dbStorage.DeleteAllBlocks()
 	// 블록들 DB에 저장
 	for _, block := range newBlocks {
 		persistBlock(block)
