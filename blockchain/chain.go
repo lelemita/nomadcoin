@@ -24,6 +24,7 @@ type blockchain struct {
 	m                 sync.Mutex
 }
 
+// Adapter pattern
 type storage interface {
 	FindBlock(hash string) []byte
 	SaveBlock(hash string, data []byte)
