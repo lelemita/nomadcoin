@@ -57,29 +57,23 @@ func TestBlockchain(t *testing.T) {
 }
 
 func TestBlocks(t *testing.T) {
-	fakeBlocks := 0
+	fakeBlock := 0
+	blocks := []*Block{
+		{PrevHash: "x"},
+		{PrevHash: ""},
+	}
 	t.Run("", func(t *testing.T) {
 		dbStorage = fakeDB{
 			fakeFindBlock: func() []byte {
-				var b *Block
-				if fakeBlocks == 0 {
-					b = &Block{
-						Height:   2,
-						PrevHash: "xxxx",
-					}
-				}
-				if fakeBlocks == 1 {
-					b = &Block{
-						Height: 1,
-					}
-				}
-				fakeBlocks++
-				return utils.ToBytes(b)
+				defer func() {
+					fakeBlock++
+				}()
+				return utils.ToBytes(blocks[fakeBlock])
 			},
 		}
 		bc := &blockchain{}
-		blocks := Blocks(bc)
-		if reflect.TypeOf(blocks) != reflect.TypeOf([]*Block{}) {
+		blocksResult := Blocks(bc)
+		if reflect.TypeOf(blocksResult) != reflect.TypeOf([]*Block{}) {
 			t.Error("Blocks() should return a slice of blocks.")
 		}
 	})
@@ -120,4 +114,38 @@ func TestFindTx(t *testing.T) {
 			t.Error("Tx should be found.")
 		}
 	})
+}
+
+// table test
+func TestGetDifficulty(t *testing.T) {
+	blocks := []*Block{
+		{PrevHash: "x"},
+		{PrevHash: "x"},
+		{PrevHash: "x"},
+		{PrevHash: "x"},
+		{PrevHash: ""},
+	}
+	fakeBlock := 0
+	dbStorage = fakeDB{
+		fakeFindBlock: func() []byte {
+			defer func() { fakeBlock++ }()
+			return utils.ToBytes(blocks[fakeBlock])
+		},
+	}
+	type test struct {
+		height int
+		want   int
+	}
+	tests := []test{
+		{height: 0, want: defaultDifficulty},
+		{height: 2, want: defaultDifficulty},
+		{height: difficultyIntterval, want: defaultDifficulty + 1},
+	}
+	for _, tc := range tests {
+		bc := &blockchain{Height: tc.height, CurrentDifficulty: defaultDifficulty}
+		di := getDifficulty(bc)
+		if di != tc.want {
+			t.Errorf("getDifficulty{} should %d got %d.", tc.want, di)
+		}
+	}
 }
