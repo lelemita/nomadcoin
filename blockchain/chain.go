@@ -100,7 +100,7 @@ func Txs(b *blockchain) (txs []*Tx) {
 	for _, block := range Blocks(b) {
 		txs = append(txs, block.Transactions...)
 	}
-	return
+	return txs
 }
 
 func FindTx(b *blockchain, targetId string) *Tx {
