@@ -60,7 +60,7 @@ func (b *blockchain) AddPeerBlock(newBlock *Block) {
 	defer b.m.Unlock()
 	defer mem.m.Unlock()
 
-	b.Height = newBlock.Height
+	b.Height += 1
 	b.NewestHash = newBlock.Hash
 	b.CurrentDifficulty = newBlock.Difficulty
 
