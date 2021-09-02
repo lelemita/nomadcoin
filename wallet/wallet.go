@@ -17,6 +17,20 @@ const (
 	fileName string = "nomadcoin.wallet"
 )
 
+type MyWallet struct{}
+
+func (MyWallet) Sign(payload string) string {
+	return sign(payload, w)
+}
+func (MyWallet) Verify(signature, payload, address string) bool {
+	return verify(signature, payload, address)
+}
+func (MyWallet) GetAddress() string {
+	return w.Address
+}
+
+var W *MyWallet = &MyWallet{}
+
 type fileLayer interface {
 	hasWalletFile() bool
 	writeFile(name string, data []byte, perm fs.FileMode) error
@@ -81,7 +95,7 @@ func aFromK(key *ecdsa.PrivateKey) string {
 	return encodeBigInts(key.X, key.Y)
 }
 
-func Sign(payload string, w *wallet) string {
+func sign(payload string, w *wallet) string {
 	payloadAsB, err := hex.DecodeString(payload)
 	utils.HandleErr(err)
 	r, s, err := ecdsa.Sign(rand.Reader, w.privateKey, payloadAsB)
@@ -100,7 +114,7 @@ func restoreBigInts(signature string) (*big.Int, *big.Int, error) {
 	return &bigA, &bigB, nil
 }
 
-func Verify(signature, payload, address string) bool {
+func verify(signature, payload, address string) bool {
 	// signature
 	r, s, err := restoreBigInts(signature)
 	utils.HandleErr(err)

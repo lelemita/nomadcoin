@@ -8,6 +8,7 @@ import (
 )
 
 func TestCreateBlock(t *testing.T) {
+	myWallet = fakeWallet{}
 	dbStorage = fakeDB{}
 	Mempool().Txs["test"] = &Tx{}
 	b := createBlock("x", 1, 1)

@@ -13,6 +13,14 @@ const (
 	minerReward int = 50
 )
 
+type asset interface {
+	Sign(payload string) string
+	Verify(signature, payload, address string) bool
+	GetAddress() string
+}
+
+var myWallet asset = wallet.W
+
 type mempool struct {
 	Txs map[string]*Tx
 	m   sync.Mutex
@@ -63,7 +71,7 @@ func (t *Tx) getId() {
 // Tx.Ins 안의 모든 TxIn에 Tx.Id로 Sign
 func (t *Tx) sign() {
 	for _, txIn := range t.TxIns {
-		txIn.Signature = wallet.Sign(t.Id, wallet.Wallet())
+		txIn.Signature = myWallet.Sign(t.Id)
 	}
 }
 
@@ -76,7 +84,7 @@ func validate(tx *Tx) bool {
 			isValid = false
 			break
 		}
-		isValid = wallet.Verify(txIn.Signature, tx.Id, tx.TxOuts[txIn.Index].Address)
+		isValid = myWallet.Verify(txIn.Signature, tx.Id, tx.TxOuts[txIn.Index].Address)
 		if !isValid {
 			break
 		}
@@ -85,7 +93,7 @@ func validate(tx *Tx) bool {
 }
 
 func (m *mempool) AddTx(to string, amount int) (*Tx, error) {
-	tx, err := makeTx(wallet.Wallet().Address, to, amount)
+	tx, err := makeTx(myWallet.GetAddress(), to, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +103,7 @@ func (m *mempool) AddTx(to string, amount int) (*Tx, error) {
 
 // 승인할 트랜젝션들 가져오고, mempool 비우기
 func (m *mempool) TxToConfirm() []*Tx {
-	coinbase := makeCoinbaseTx(wallet.Wallet().Address)
+	coinbase := makeCoinbaseTx(myWallet.GetAddress())
 	var txs []*Tx
 	for _, tx := range m.Txs {
 		txs = append(txs, tx)

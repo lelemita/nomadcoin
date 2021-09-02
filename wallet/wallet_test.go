@@ -64,7 +64,8 @@ func makeTestWallet() *wallet {
 }
 
 func TestSign(t *testing.T) {
-	sig := Sign(testPayload, makeTestWallet())
+	w = makeTestWallet()
+	sig := W.Sign(testPayload)
 	// 서명은 일치여부로 검사불가(랜덤). hexadecimal 인지를 검사
 	_, err := hex.DecodeString(sig)
 	if err != nil {
@@ -83,7 +84,7 @@ func TestVerify(t *testing.T) {
 	}
 	for _, tc := range tests {
 		w := makeTestWallet()
-		ok := Verify(testSig, tc.input, w.Address)
+		ok := W.Verify(testSig, tc.input, w.Address)
 		if ok != tc.ok {
 			t.Error("Verify() could not verify testSignature and testPayload")
 		}

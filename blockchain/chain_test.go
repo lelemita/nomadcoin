@@ -9,7 +9,6 @@ import (
 )
 
 type fakeDB struct {
-	// 테스트 해야할 결과문이 두개 이상이면 fake func 필요
 	fakeLoadChain func() []byte
 	fakeFindBlock func() []byte
 }
