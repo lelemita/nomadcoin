@@ -98,6 +98,14 @@ func TestRestoreBigInts(t *testing.T) {
 	}
 }
 
+func TestGetAddress(t *testing.T) {
+	w = &wallet{Address: "fakeAddress"}
+	addr := W.GetAddress()
+	if addr != "fakeAddress" {
+		t.Errorf("GetAddress() should return Address, Got %s", addr)
+	}
+}
+
 // func toGetTestKey(t *testing.T) {
 // 	// createPrivKey()
 // 	privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

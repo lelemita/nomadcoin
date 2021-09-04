@@ -33,6 +33,10 @@ func TestAddTx(t *testing.T) {
 					TxOuts: []*TxOut{
 						{Address: "fakeAddress", Amount: 50}, {Address: "fakeAddress", Amount: 50},
 						{Address: "fakeAddress", Amount: 50}, {Address: "fakeAddress", Amount: 50}},
+				}, {
+					Id: "Tx02",
+					TxIns: []*TxIn{
+						{TxId: "Tx01", Index: 0}, {Signature: "COINBASE"}},
 				}}}
 			return utils.ToBytes(b)
 		},
