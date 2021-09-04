@@ -32,3 +32,6 @@ go tool cover -html='cover.out'
 # go get golang.org/x/tools/cmd/godoc
 # godoc -http=:6060
 ```
+
+### TO-DO
+* db.getDbName(): 실행문에 -port=4000 없으면 에러나는 부분
